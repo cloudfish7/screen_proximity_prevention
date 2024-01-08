@@ -1,5 +1,5 @@
 from machine import Pin, I2C, PWM
-import framebuf,sys,time,utime,machine
+import framebuf,sys,utime,machine
 from vl53l0x import VL53L0X
 
 # variable
@@ -22,12 +22,12 @@ def health_status(error_code):
 	# Error Distance Sensor
 	elif error_code == 1:
 		led.off()
-		time.sleep(2)
+		utime.sleep(2)
 		led.on()
 	# Unknown Error
 	elif error_code == 2:
 		led.off()
-		time.sleep(0.5)
+		utime.sleep(0.5)
 		led.on()
 
 
@@ -40,10 +40,10 @@ def alert():
 	for idx in range(0, len(freqLis)):
 	    buzzer.freq(freqLis[idx])
 	    buzzer.duty_u16(256*16)
-	    time.sleep(0.2)
+	    utime.sleep(0.2)
 	buzzer.duty_u16(0) 
 
-	time.sleep(3)
+	utime.sleep(3)
 
 def main():
 	sda = Pin(SDA_PIN)
