@@ -1,5 +1,5 @@
 from machine import Pin, I2C, PWM
-import framebuf,sys,utime,machine
+import framebuf,sys,utime,machine,network
 from vl53l0x import VL53L0X
 
 # variable
@@ -7,12 +7,19 @@ LIMIT_DISTANCE = 60
 CHECK_INTERVAL = 3
 SDA_PIN = 8
 SCL_PIN = 9
-DEFAULT_LED_GPIO = 25
 BUZZER_GPIO = 17
 
-# notify health status with led
-def health_status(error_code):
+def get_default_led_gpio():
+	# if this hardware is  raspberry pi Pico W
+	if hasattr(network, "WLAN"):
+		return "LED" 
+	
+	return "25"
 
+# notify health status with led
+def health_status(error_code, DEFAULT_LED_GPIO=25):
+
+	DEFAULT_LED_GPIO = get_default_led_gpio()
 	led = Pin(DEFAULT_LED_GPIO, Pin.OUT)
 	led.off()
 
@@ -21,21 +28,27 @@ def health_status(error_code):
 		led.on()
 	# Error Distance Sensor
 	elif error_code == 1:
-		led.off()
-		utime.sleep(2)
-		led.on()
+		
+		while True:
+			led.off()
+			utime.sleep(1.5)
+			led.on()
+			utime.sleep(1.5)
+
 	# Unknown Error
 	elif error_code == 2:
-		led.off()
-		utime.sleep(0.5)
-		led.on()
+
+		while True:
+			led.off()
+			utime.sleep(0.5)
+			led.on()
+			utime.sleep(0.5)
 
 
 # ring buzzer
 def alert():
 
 	buzzer = PWM(Pin(BUZZER_GPIO))
-	#freqLis = [262, 294, 330, 349, 392, 440, 494, 523]
 	freqLis = [523]
 	for idx in range(0, len(freqLis)):
 	    buzzer.freq(freqLis[idx])
@@ -49,7 +62,6 @@ def main():
 	sda = Pin(SDA_PIN)
 	scl = Pin(SCL_PIN)
 	id = 0
-	#i2c = I2C(id=id, sda=sda, scl=scl, freq=400000)
 	i2c = I2C(id=id, sda=sda, scl=scl)
 
 	print("setting up i2c")
@@ -70,10 +82,11 @@ def main():
 		# tof.set_Vcsel_pulse_period(tof.vcsel_period_type[1], 14)
 		tof.set_Vcsel_pulse_period(tof.vcsel_period_type[1], 8)
 	except Exception as e:
-		health_status(1)
+		print(f"Execption: {e}")
+		health_status(error_code=1)
 
 	# status health
-	health_status(0)
+	health_status(error_code=0)
 
 	# Start ranging
 	while True:
@@ -92,7 +105,8 @@ def main():
 				print(f"over {LIMIT_DISTANCE}cm")
 		
 		except Exception as e:
-			health_status(2)
+			print(f"Execption: {e}")
+			health_status(error_code=2)
 
 if __name__ == "__main__":
 	main()
