@@ -1,5 +1,5 @@
 from machine import Pin, I2C, PWM
-import framebuf,sys,utime,machine,network
+import framebuf,sys,utime,machine
 from vl53l0x import VL53L0X
 
 # variable
@@ -10,11 +10,16 @@ SCL_PIN = 9
 BUZZER_GPIO = 17
 
 def get_default_led_gpio():
-	# if this hardware is  raspberry pi Pico W
-	if hasattr(network, "WLAN"):
-		return "LED" 
+
+	try:
+		import network
+		# if this hardware is  raspberry pi Pico W
+		if hasattr(network, "WLAN"):
+			return "LED" 
 	
-	return "25"
+	except Exception as e:
+		print(f"Execption: {e}")
+		return 25
 
 # notify health status with led
 def health_status(error_code, DEFAULT_LED_GPIO=25):
@@ -62,7 +67,8 @@ def main():
 	sda = Pin(SDA_PIN)
 	scl = Pin(SCL_PIN)
 	id = 0
-	i2c = I2C(id=id, sda=sda, scl=scl)
+	#i2c = I2C(id=id, sda=sda, scl=scl)
+	i2c = I2C(id=id, sda=sda, scl=scl,freq=400000)
 
 	print("setting up i2c")
 	print(i2c.scan())
